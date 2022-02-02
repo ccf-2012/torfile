@@ -49,20 +49,40 @@ def torrent_clean(torrent_filepath, new_announce, save_path):
     tp_dst['created by'] = tp_src['created by']
     tp_dst['info'] = {}
     tp_dst['info']['name'] = tp_src['info']['name']
-    tp_dst['info']['pieces'] = tp_src['info']['pieces']
+    if 'length' in tp_src['info']:
+        tp_dst['info']['length'] = tp_src['info']['length']
+    if 'piece length' in tp_src['info']:
+        tp_dst['info']['piece length'] = tp_src['info']['piece length']
     tp_dst['info']['files'] = tp_src['info']['files']
+    tp_dst['info']['pieces'] = tp_src['info']['pieces']
     tp_dst['info']['private'] = 1
     tp_dst['info']['source'] = ''
     
     new_torrent_path = os.path.join(save_path, tp_dst['info']['name']+ '.torrent')
     tp.create_torrent_file(new_torrent_path, tp_dst)
 
+def list_all_items(mypath):
+    onlyfiles = [f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+    all_items = {'info':{}}
+    for f in onlyfiles:
+        s = tp.parse_torrent_file(os.path.join(mypath, f))
+        for k in s.keys():
+            if k == 'info':
+                for k_info in s['info'].keys():
+                    if k_info not in ['pieces', 'files']:
+                        all_items['info'][k_info] =  s['info'][k_info]
+            else:
+                all_items[k] = s[k]       
+
+    print(all_items)
 
 def main():
-    if ARGS.clean:
-        torrent_clean(ARGS.torrent, ARGS.announce, ARGS.save_path)
-    else:
-        torrent_info(ARGS.torrent)
+    if ARGS.save_path:
+        list_all_items(ARGS.save_path)
+    # if ARGS.clean:
+    #     torrent_clean(ARGS.torrent, ARGS.announce, ARGS.save_path)
+    # else:
+    #     torrent_info(ARGS.torrent)
 
 if __name__ == '__main__':
     main()
