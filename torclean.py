@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-f', '--torrent', type=str, required=True, help='the .torrent file to be cleaned.')
 parser.add_argument('-a', '--announce', type=str, default='', help='the annount url(with your passkey).')
 parser.add_argument('-s', '--save-path', type=str, default='.', help='the path that saves new created .torrent.')
-parser.add_argument('--clean', action='store_true', help='clean the torrent.')
+parser.add_argument('--info', action='store_true', help='display the torrent info.')
 ARGS = parser.parse_args()
 
 ARGS.save_path = os.path.expanduser(ARGS.save_path)
@@ -20,49 +20,52 @@ ARGS.save_path = os.path.expanduser(ARGS.save_path)
 def torrent_info(torrent_filepath):
     data = tp.parse_torrent_file(torrent_filepath)
     if 'info' not in data:
-        print('ERROR: wrong torrent file.')
+        print('Torrent file error.')
         return 
-
-    for k in data.keys():
-        if k == 'info':
-            for i in data['info']:
-                if i not in  ['pieces', 'files']:
-                    print('info - ', i, ': ', data['info'][i])
-        elif k == 'announce':
-            m = re.match(r'(https?://[^/]+/)', data['announce'])
-            if m:
-                astr = m.group(1)
-                print('announce: ' + astr)
-        else:
-            print(k, ': ', data[k])
+    print('name: ' + data['info']['name'])
+    print('created by: ' + data['created by'])
+    m = re.match(r'(https?://[^/]+/)', data['announce'])
+    if m:
+        astr = m.group(1)
+        print('announce: ' + astr)
 
 
 def torrent_clean(torrent_filepath, new_announce, save_path):
-    tp_src = tp.parse_torrent_file(torrent_filepath)
-    if 'info' not in tp_src:
+    data = tp.parse_torrent_file(torrent_filepath)
+    if 'info' not in data:
         print('Torrent file error.')
         return 
-    tp_dst = {}
-    tp_dst['announce'] = new_announce
-    tp_dst['creation date'] = int(time.time()) 
-    # data['created by'] = 'uTorrent/2210'
-    tp_dst['created by'] = tp_src['created by']
-    tp_dst['info'] = {}
-    tp_dst['info']['name'] = tp_src['info']['name']
-    tp_dst['info']['pieces'] = tp_src['info']['pieces']
-    tp_dst['info']['files'] = tp_src['info']['files']
-    tp_dst['info']['private'] = 1
-    tp_dst['info']['source'] = ''
-    
-    new_torrent_path = os.path.join(save_path, tp_dst['info']['name']+ '.torrent')
-    tp.create_torrent_file(new_torrent_path, tp_dst)
+    if 'publisher' in data:
+        del data['publisher']
+    if 'publisher-url' in data:
+        del data['publisher-url']
+    if 'website' in data:
+        del data['website']
+    if 'checksum' in data:
+        del data['checksum']
+    if 'identity' in data:
+        del data['identity']
+    if 'ttg_tag' in data['info']:
+        del data['info']['ttg_tag']
+    if 'announce-list' in data:
+        del data['announce-list']
+    if 'comment' in data:
+        data['comment'] = ''
+    if 'source' in data['info'] :
+        data['info']['source'] = ''
+    data['info']['private'] = 1
+    data['announce'] = new_announce
+    data['creation date'] = int(time.time()) 
+    new_torrent_path = os.path.join(save_path, data['info']['name']+ '.torrent')
+    data['created by'] = 'uTorrent/2210'
+    tp.create_torrent_file(new_torrent_path, data)
 
 
 def main():
-    if ARGS.clean:
-        torrent_clean(ARGS.torrent, ARGS.announce, ARGS.save_path)
-    else:
+    if ARGS.info:
         torrent_info(ARGS.torrent)
+    else:
+        torrent_clean(ARGS.torrent, ARGS.announce, ARGS.save_path)
 
 if __name__ == '__main__':
     main()
