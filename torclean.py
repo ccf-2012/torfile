@@ -24,8 +24,6 @@ def torrent_info(torrent_filepath):
         return 
     print('name: ' + data['info']['name'])
     print('created by: ' + data['created by'])
-    # https://announce.leaguehd.com/announce.php?passkey=
-    # http://please.passthepopcorn.me:2710/tb8dasfds3a8h3sdf1/announce
     m = re.match(r'(https?://[^/]+/)', data['announce'])
     if m:
         astr = m.group(1)
