@@ -77,12 +77,12 @@ def list_all_items(mypath):
     print(all_items)
 
 def main():
-    if ARGS.save_path:
-        list_all_items(ARGS.save_path)
-    # if ARGS.clean:
-    #     torrent_clean(ARGS.torrent, ARGS.announce, ARGS.save_path)
-    # else:
-    #     torrent_info(ARGS.torrent)
+    # if ARGS.save_path:
+    #     list_all_items(ARGS.save_path)
+    if ARGS.clean:
+        torrent_clean(ARGS.torrent, ARGS.announce, ARGS.save_path)
+    else:
+        torrent_info(ARGS.torrent)
 
 if __name__ == '__main__':
     main()
